@@ -1,0 +1,352 @@
+{
+  "info": {
+    "_postman_id": "d349992a-6503-4ada-8398-821d21f0a69b",
+    "name": "BookerAutomation",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52737550",
+    "_collection_link": "https://go.postman.co/collection/52737550-d349992a-6503-4ada-8398-821d21f0a69b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Auth returns 200\", () => {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const body = pm.response.json(); //convert response JSON into a JS object called body",
+              "pm.test(\"Token exists\", () => {",
+              "  pm.expect(body.token).to.be.a(\"string\");",
+              "  pm.expect(body.token.length).to.be.above(5);",
+              "});",
+              "",
+              "pm.environment.set(\"token\", body.token); //save variable"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth"
+          ]
+        },
+        "description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+      },
+      "response": []
+    },
+    {
+      "name": "Create Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status Code: 200\", () => {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.test(`BookingID ${body.bookingid}`, () => {",
+              "  pm.expect(body.bookingid).to.be.a(\"number\");",
+              "});",
+              "",
+              "// save bookingId for next request",
+              "pm.environment.set(\"bookingId\", body.bookingid);",
+              "console.log(body.bookingid);",
+              "// optional: also save expected values to compare later",
+              "pm.environment.set(\"bookingFirstName\", body.booking.firstname);",
+              "pm.environment.set(\"bookingLastName\", body.booking.lastname);",
+              "pm.environment.set(\"bookingPrice\", body.booking.totalprice);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"Jason\",\n  \"lastname\": \"Zai\",\n  \"totalprice\": 123,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-02-27\",\n    \"checkout\": \"2026-02-28\"\n  },\n  \"additionalneeds\": \"Breakfast\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "booking"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "RetrieveBooking (Before)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status Code: 200\", () => {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const b = pm.response.json();",
+              "",
+              "//compared if the booking info of this booking is the same as the one created",
+              "pm.test(\"Booking fields match created data\", () => {",
+              "  pm.expect(b.firstname).to.eql(pm.environment.get(\"bookingFirstName\")); ",
+              "  pm.expect(b.lastname).to.eql(pm.environment.get(\"bookingLastName\"));",
+              "  pm.expect(b.totalprice).to.eql(Number(pm.environment.get(\"bookingPrice\")));",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "booking",
+            "{{bookingId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"StatusCode: 200\", () => {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const b = pm.response.json();",
+              "//print in Test Results whether update successful",
+              "pm.test(\"Booking details updated\", () => {",
+              "  pm.expect(b.lastname).to.eql(\"Tan\");",
+              "  pm.expect(b.totalprice).to.eql(Number(\"999\"));",
+              "});",
+              "",
+              "//Assign back latest value, so that when call RetrieveBooking will return latest details",
+              "pm.environment.set(\"bookingLastName\", b.lastname);",
+              "pm.environment.set(\"bookingPrice\", b.totalprice);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Cookie",
+            "value": "token={{token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"Jason\",\n  \"lastname\": \"Tan\",\n  \"totalprice\": 999,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-02-27\",\n    \"checkout\": \"2026-02-28\"\n  },\n  \"additionalneeds\": \"Breakfast\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "booking",
+            "{{bookingId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "RetrieveBooking (After)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status Code: 200\", () => {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const b = pm.response.json();",
+              "",
+              "pm.test(\"Booking fields match updated data\", () => {",
+              "  pm.expect(b.lastname).to.eql(pm.environment.get(\"bookingLastName\"));",
+              "  pm.expect(b.totalprice).to.eql(Number(pm.environment.get(\"bookingPrice\")));",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "booking",
+            "{{bookingId}}"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
