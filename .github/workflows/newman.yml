@@ -4,6 +4,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   run-newman:
@@ -30,9 +31,35 @@ jobs:
           npx newman run postman/BookerAutomation.postman_collection.json \
             -e postman/Booker.postman_environment.json \
             --env-var "baseUrl=$BASE_URL" \
-            --reporters cli,htmlextra,junit \
+            --reporters cli,htmlextra,junit,json \
             --reporter-htmlextra-export reports/newman-report.html \
-            --reporter-junit-export reports/junit.xml
+            --reporter-junit-export reports/junit.xml \
+            --reporter-json-export reports/newman.json
+
+      - name: Show summary in GitHub
+        if: always()
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const p = JSON.parse(fs.readFileSync('reports/newman.json','utf8'));
+          const s = p.run.stats;
+          const failures = p.run.failures || [];
+
+          let md = `## Newman API Results\n\n` +
+                   `- Requests: **${s.requests.total}** (failed **${s.requests.failed}**)\n` +
+                   `- Assertions: **${s.assertions.total}** (failed **${s.assertions.failed}**)\n` +
+                   `- Failures: **${failures.length}**\n\n`;
+
+          if (failures.length) {
+            md += `### First failures\n`;
+            failures.slice(0, 5).forEach((f, i) => {
+              md += `${i+1}. **${f.source.name}** — ${f.error && f.error.message ? f.error.message : 'Error'}\n`;
+            });
+            md += `\n(Download artifact for full HTML report)\n`;
+          }
+
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+          NODE
 
       - name: Upload reports
         if: always()
