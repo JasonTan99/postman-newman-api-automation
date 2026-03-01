@@ -27,7 +27,8 @@ jobs:
           BASE_URL: https://restful-booker.herokuapp.com
         run: |
           mkdir -p reports
-          npx newman run postman/booker_collection.json \
+          npx newman run postman/BookerAutomation.postman_collection.json \
+            -e postman/Booker.postman_environment.json \
             --env-var "baseUrl=$BASE_URL" \
             --reporters cli,htmlextra,junit \
             --reporter-htmlextra-export reports/newman-report.html \
