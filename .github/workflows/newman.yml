@@ -1,0 +1,42 @@
+name: Newman API Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  run-newman:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Newman
+        env:
+          BASE_URL: https://restful-booker.herokuapp.com
+        run: |
+          mkdir -p reports
+          npx newman run postman/booker_collection.json \
+            --env-var "baseUrl=$BASE_URL" \
+            --reporters cli,htmlextra,junit \
+            --reporter-htmlextra-export reports/newman-report.html \
+            --reporter-junit-export reports/junit.xml
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-reports
+          path: reports
+          retention-days: 14
